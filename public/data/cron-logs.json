@@ -175,6 +175,22 @@
       "summary": "Tentativa #4: Cron failed genérico — sistema de delivery também falhou, João não recebeu aviso.",
       "delivered": false,
       "date": "2026-07-15"
+    },
+    {
+      "jobId": "0adf00df-2f93-4111-987d-94e8a437d20f",
+      "jobName": "dashboard-data-push",
+      "displayName": "📊 PIPO Dashboard — Coleta de Dados",
+      "status": "ok",
+      "error": null,
+      "durationMs": null,
+      "totalTokens": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": "deepseek-v4-flash-free",
+      "runAt": "2026-07-15T12:00:00.000-03:00",
+      "summary": "Coleta de dados dos crons e atualização do dashboard.",
+      "delivered": true,
+      "date": "2026-07-15"
     }
   ],
   "timeline": [
@@ -186,10 +202,10 @@
     },
     {
       "date": "2026-07-15",
-      "total": 10,
-      "ok": 5,
+      "total": 11,
+      "ok": 6,
       "error": 5
     }
   ],
-  "lastUpdated": "2026-07-15T14:35:00.000Z"
+  "lastUpdated": "2026-07-15T15:00:00.000Z"
 }
