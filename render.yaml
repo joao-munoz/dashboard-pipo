@@ -1,0 +1,8 @@
+# render.yaml — Config do Static Site
+services:
+  - type: static_site
+    name: dashboard-pipo
+    repo: https://github.com/joao-munoz/dashboard-pipo
+    branch: main
+    buildCommand: npm install && npm run build
+    publishPath: out
