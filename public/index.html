@@ -1,457 +1,368 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PIPO Dashboard — Monitor</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0a0a0f; color: #e4e4e7; min-height: 100vh; }
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PIPO Dashboard — Monitor de Crons</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#0a0a0f;color:#e4e4e7;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:16px}
 
-    /* Header */
-    .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #1f1f28; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .header-left { display: flex; align-items: center; gap: 16px; }
-    .logo { width: 40px; height: 40px; background: linear-gradient(135deg, #22d3ee, #a78bfa); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; color: #0a0a0f; }
-    .header h1 { font-size: 22px; font-weight: 700; }
-    .header .subtitle { font-size: 12px; color: #71717a; font-family: 'SF Mono', 'Fira Code', monospace; }
-    .header-right { display: flex; align-items: center; gap: 16px; font-size: 13px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-    .status-dot.ok { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.4); }
-    .status-dot.error { background: #f87171; box-shadow: 0 0 8px rgba(248,113,113,0.4); }
-    .status-dot.unknown { background: #71717a; }
-    .last-update { color: #71717a; font-size: 11px; font-family: monospace; }
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid #1f1f28;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;background:linear-gradient(135deg,#22d3ee,#a78bfa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#0a0a0f}
+.header h1{font-size:20px;font-weight:700}
+.header .subtitle{font-size:11px;color:#71717a}
+.header-right{display:flex;align-items:center;gap:12px;font-size:12px;flex-wrap:wrap}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.status-dot.operational{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.4)}
+.status-dot.degraded{background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.4)}
+.status-dot.critical{background:#f87171;box-shadow:0 0 8px rgba(248,113,113,.4)}
+.last-update{color:#71717a;font-size:11px;font-family:monospace}
 
-    /* Stats row */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: #13131b; border: 1px solid #1f1f28; border-radius: 12px; padding: 16px; }
-    .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #71717a; margin-bottom: 6px; }
-    .stat-card .value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .stat-card .value.ok { color: #4ade80; }
-    .stat-card .value.error { color: #f87171; }
-    .stat-card .value.neutral { color: #e4e4e7; }
-    .stat-card .sub { font-size: 11px; color: #71717a; margin-top: 4px; }
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.stat{background:#13131b;border:1px solid #1f1f28;border-radius:10px;padding:14px}
+.stat .label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#71717a;margin-bottom:4px}
+.stat .value{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .value.green{color:#4ade80}
+.stat .value.red{color:#f87171}
+.stat .value.white{color:#e4e4e7}
+.stat .sub{font-size:10px;color:#71717a;margin-top:2px}
 
-    /* Charts grid */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    .chart-card { background: #13131b; border: 1px solid #1f1f28; border-radius: 12px; padding: 16px; }
-    .chart-card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #71717a; margin-bottom: 12px; }
-    .chart-card .chart-container { position: relative; height: 220px; }
-    .chart-card.full-height .chart-container { height: 300px; }
+.card{background:#13131b;border:1px solid #1f1f28;border-radius:10px;padding:14px;margin-bottom:16px}
+.card h3{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#71717a;margin-bottom:10px}
+.chart-box{position:relative;height:200px}
+.chart-box.tall{height:260px}
 
-    /* Timeline table */
-    .timeline-section { background: #13131b; border: 1px solid #1f1f28; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
-    .timeline-section h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #71717a; margin-bottom: 12px; }
-    .timeline-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .timeline-table th { text-align: left; padding: 8px 12px; color: #52525b; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1f1f28; }
-    .timeline-table td { padding: 8px 12px; border-bottom: 1px solid #14141e; }
-    .timeline-table tr:hover { background: #181820; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-    .badge.ok { background: #14532d; color: #4ade80; }
-    .badge.error { background: #450a0a; color: #f87171; }
-    .badge.timeout { background: #451a03; color: #fb923c; }
-    .duration-bar { display: inline-block; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #22d3ee, #a78bfa); margin-right: 6px; vertical-align: middle; }
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px}
 
-    /* Job detail cards */
-    .job-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .job-card { background: #13131b; border: 1px solid #1f1f28; border-radius: 10px; padding: 14px; }
-    .job-card .job-name { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-    .job-card .job-stat { display: flex; justify-content: space-between; font-size: 12px; color: #71717a; margin-bottom: 4px; }
-    .job-card .job-bar { height: 4px; border-radius: 2px; background: #1f1f28; margin-top: 8px; overflow: hidden; }
-    .job-card .job-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+.job-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.job-item{background:#0f0f17;border:1px solid #1a1a25;border-radius:8px;padding:12px}
+.job-item .name{font-size:12px;font-weight:600;margin-bottom:6px}
+.job-item .row{display:flex;justify-content:space-between;font-size:11px;color:#71717a;margin-bottom:2px}
+.job-item .bar{height:3px;border-radius:2px;background:#1f1f28;margin-top:6px;overflow:hidden}
+.job-item .bar-fill{height:100%;border-radius:2px;transition:width .5s}
 
-    /* Loading */
-    .loading { text-align: center; padding: 60px; color: #71717a; }
-    .loading .spinner { width: 32px; height: 32px; border: 3px solid #1f1f28; border-top-color: #22d3ee; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+.timeline-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 8px;color:#52525b;font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #1f1f28}
+td{padding:6px 8px;border-bottom:1px solid #14141e}
+tr:hover{background:#181820}
+.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600}
+.badge.ok{background:#14532d;color:#4ade80}
+.badge.error{background:#450a0a;color:#f87171}
+.badge.timeout{background:#451a03;color:#fb923c}
+.bar-dur{display:inline-block;height:5px;border-radius:2px;background:linear-gradient(90deg,#22d3ee,#a78bfa);margin-right:4px;vertical-align:middle}
 
-    /* Footer */
-    .footer { text-align: center; padding: 20px; font-size: 11px; color: #52525b; border-top: 1px solid #1f1f28; }
+.loading{text-align:center;padding:60px;color:#71717a}
+.loading .spinner{width:28px;height:28px;border:3px solid #1f1f28;border-top-color:#22d3ee;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-    @media (max-width: 768px) {
-      .grid-2, .grid-3 { grid-template-columns: 1fr; }
-      .stats-row { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
+footer{text-align:center;padding:16px;font-size:10px;color:#52525b;border-top:1px solid #1f1f28;margin-top:20px}
+
+@media(max-width:768px){.grid2,.grid3{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
-  <div class="container" id="app">
-    <!-- Header -->
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">P</div>
-        <div>
-          <h1>PIPO Dashboard</h1>
-          <div class="subtitle">Monitor de Crons — Ecossistema PIPO</div>
-        </div>
-      </div>
-      <div class="header-right">
-        <span><span class="status-dot" id="liveDot"></span><span id="liveStatus">Carregando...</span></span>
-        <span class="last-update" id="lastUpdate"></span>
+<div class="container" id="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">P</div>
+      <div>
+        <h1>PIPO Dashboard</h1>
+        <div class="subtitle">Monitor de Crons · Ecossistema PIPO</div>
       </div>
     </div>
-
-    <!-- Loading -->
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <div>Carregando dados dos crons...</div>
+    <div class="header-right">
+      <span><span class="status-dot" id="liveDot"></span><span id="liveStatus">—</span></span>
+      <span class="last-update" id="lastUpdate"></span>
     </div>
-
-    <!-- Dashboard -->
-    <div id="dashboard" style="display:none">
-      <!-- Stat cards -->
-      <div class="stats-row" id="statsRow"></div>
-
-      <!-- Charts row 1 -->
-      <div class="grid-2">
-        <div class="chart-card"><h3>Status por Dia</h3><div class="chart-container"><canvas id="dailyChart"></canvas></div></div>
-        <div class="chart-card"><h3>Duração Média por Job</h3><div class="chart-container"><canvas id="durationChart"></canvas></div></div>
-      </div>
-
-      <!-- Charts row 2 -->
-      <div class="grid-3">
-        <div class="chart-card"><h3>Tokens por Job</h3><div class="chart-container"><canvas id="tokensChart"></canvas></div></div>
-        <div class="chart-card"><h3>Taxa de Sucesso</h3><div class="chart-container"><canvas id="successRateChart"></canvas></div></div>
-        <div class="chart-card"><h3>Distribuição de Status</h3><div class="chart-container"><canvas id="statusPieChart"></canvas></div></div>
-      </div>
-
-      <!-- Job cards -->
-      <div class="timeline-section">
-        <h3>📊 Jobs</h3>
-        <div class="job-grid" id="jobGrid"></div>
-      </div>
-
-      <!-- Timeline -->
-      <div class="timeline-section">
-        <h3>🕐 Últimas Execuções</h3>
-        <div style="overflow-x:auto">
-          <table class="timeline-table">
-            <thead>
-              <tr>
-                <th>Horário</th>
-                <th>Job</th>
-                <th>Status</th>
-                <th>Duração</th>
-                <th>Tokens</th>
-                <th>Resumo</th>
-              </tr>
-            </thead>
-            <tbody id="timelineBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">PIPO Dashboard v2.0 — <span id="footerDate"></span></div>
   </div>
 
-  <script>
-    // ─── Chart.js defaults ───────────────────────────────────
-    Chart.defaults.color = '#71717a';
-    Chart.defaults.borderColor = '#1f1f28';
-    Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+  <div class="loading" id="loading"><div class="spinner"></div><div>Carregando...</div></div>
 
-    // ─── Data & rendering ───────────────────────────────────
-    let summary = null;
+  <div id="dashboard" style="display:none">
+    <div class="stats" id="statsRow"></div>
 
-    function fmtTime(ts) {
-      if (!ts) return '—';
-      const d = new Date(ts);
-      return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    }
+    <div class="grid2">
+      <div class="card"><h3>Execuções por Dia</h3><div class="chart-box"><canvas id="dailyChart"></canvas></div></div>
+      <div class="card"><h3>Duração Média por Job</h3><div class="chart-box"><canvas id="durationChart"></canvas></div></div>
+    </div>
 
-    function fmtDuration(ms) {
-      if (!ms) return '—';
-      if (ms < 1000) return ms + 'ms';
-      if (ms < 60000) return (ms / 1000).toFixed(1) + 's';
-      const m = Math.floor(ms / 60000);
-      const s = ((ms % 60000) / 1000).toFixed(0);
-      return m + 'm ' + s + 's';
-    }
+    <div class="grid3">
+      <div class="card"><h3>Tokens Totais</h3><div class="chart-box"><canvas id="tokensChart"></canvas></div></div>
+      <div class="card"><h3>Taxa de Sucesso</h3><div class="chart-box"><canvas id="successChart"></canvas></div></div>
+      <div class="card"><h3>Status</h3><div class="chart-box"><canvas id="pieChart"></canvas></div></div>
+    </div>
 
-    function fmtTokens(n) {
-      if (!n) return '—';
-      if (n < 1000) return n + '';
-      if (n < 1000000) return (n / 1000).toFixed(1) + 'K';
-      return (n / 1000000).toFixed(1) + 'M';
-    }
+    <div class="card">
+      <h3>Jobs</h3>
+      <div class="job-grid" id="jobGrid"></div>
+    </div>
 
-    function fmtDate(iso) {
-      if (!iso) return '—';
-      const d = new Date(iso);
-      return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    }
+    <div class="card">
+      <h3>Últimas Execuções</h3>
+      <div class="timeline-wrap">
+        <table>
+          <thead><tr><th>Hora</th><th>Job</th><th>Status</th><th>Duração</th><th>Tokens</th><th>Resumo</th></tr></thead>
+          <tbody id="timelineBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-    function formatDateKey(key) {
-      if (!key) return '—';
-      const parts = key.split('-');
-      if (parts.length === 3) {
-        const d = new Date(key + 'T12:00:00');
-        return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'numeric' });
-      }
-      return key;
-    }
+  <footer>PIPO Dashboard v2 · <span id="footerDate"></span></footer>
+</div>
 
-    function renderStats() {
-      const row = document.getElementById('statsRow');
-      const s = summary;
-      row.innerHTML = `
-        <div class="stat-card">
-          <div class="label">Total Execuções</div>
-          <div class="value neutral">${s.total}</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Sucesso</div>
-          <div class="value ok">${s.ok}</div>
-          <div class="sub">${s.total > 0 ? Math.round(s.ok / s.total * 100) : 0}% dos jobs</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Falhas</div>
-          <div class="value error">${s.errors}</div>
-          <div class="sub">${s.errorRate}% de erro</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Jobs Únicos</div>
-          <div class="value neutral">${s.byJob ? s.byJob.length : 0}</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Última Atualização</div>
-          <div class="value neutral" style="font-size:14px">${s.lastUpdated ? fmtDate(s.lastUpdated) : '—'}</div>
-        </div>
-      `;
-    }
+<script>
+const COLORS = { ok: '#4ade80', error: '#f87171', timeout: '#fb923c' };
+const BG = { ok: '#14532d', error: '#450a0a', timeout: '#451a03' };
 
-    function renderJobCards() {
-      const grid = document.getElementById('jobGrid');
-      if (!summary.byJob || !summary.byJob.length) {
-        grid.innerHTML = '<div style="color:#71717a;font-size:13px;grid-column:1/-1;text-align:center;padding:20px">Nenhum job registrado</div>';
-        return;
-      }
-      grid.innerHTML = summary.byJob.sort((a, b) => b.total - a.total).map(j => {
-        const successPct = j.total > 0 ? Math.round(j.ok / j.total * 100) : 0;
-        const barColor = successPct >= 80 ? '#4ade80' : successPct >= 50 ? '#fbbf24' : '#f87171';
-        return `
-          <div class="job-card">
-            <div class="job-name">${j.name}</div>
-            <div class="job-stat"><span>Execuções</span><span>${j.total}</span></div>
-            <div class="job-stat"><span>Sucesso</span><span style="color:#4ade80">${j.ok}</span></div>
-            <div class="job-stat"><span>Falhas</span><span style="color:#f87171">${j.error}</span></div>
-            <div class="job-stat"><span>Duração média</span><span>${fmtDuration(j.avgDuration)}</span></div>
-            <div class="job-stat"><span>Tokens (total)</span><span>${fmtTokens(j.totalTokens)}</span></div>
-            <div class="job-bar"><div class="job-bar-fill" style="width:${successPct}%;background:${barColor};box-shadow:0 0 6px ${barColor}40"></div></div>
-          </div>
-        `;
-      }).join('');
-    }
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
 
-    function renderTimeline() {
-      const tbody = document.getElementById('timelineBody');
-      if (!summary.latest || !summary.latest.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#71717a;padding:20px">Nenhuma execução registrada</td></tr>';
-        return;
-      }
-      tbody.innerHTML = summary.latest.map(r => {
-        const status = r.status || 'unknown';
-        const badgeClass = status === 'ok' ? 'ok' : status === 'error' ? 'error' : 'timeout';
-        const durPct = Math.min((r.durationMs || 0) / 5000, 100);
-        return `
-          <tr>
-            <td style="font-family:monospace;font-size:12px">${fmtTime(r.runAt)}</td>
-            <td><strong>${r.displayName || r.jobName || r.name || '—'}</strong></td>
-            <td><span class="badge ${badgeClass}">${status}</span></td>
-            <td style="font-family:monospace;font-size:12px">
-              <span class="duration-bar" style="width:${durPct}px"></span>${fmtDuration(r.durationMs)}
-            </td>
-            <td style="font-family:monospace;font-size:12px">${fmtTokens(r.totalTokens)}</td>
-            <td style="color:#71717a;font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              ${(r.summary || '').slice(0, 120)}${(r.summary || '').length > 120 ? '...' : ''}
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
+function fmtDur(ms) {
+  if (!ms) return '—';
+  if (ms < 1e3) return ms + 'ms';
+  if (ms < 6e4) return (ms/1e3).toFixed(1) + 's';
+  return Math.floor(ms/6e4) + 'm ' + Math.round((ms%6e4)/1e3) + 's';
+}
 
-    // ─── Charts ──────────────────────────────────────────────
-    let charts = {};
+function fmtTok(n) {
+  if (!n) return '—';
+  if (n < 1e3) return '' + n;
+  if (n < 1e6) return (n/1e3).toFixed(1) + 'K';
+  return (n/1e6).toFixed(1) + 'M';
+}
 
-    function destroyCharts() {
-      Object.values(charts).forEach(c => { try { c.destroy(); } catch {} });
-      charts = {};
-    }
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+}
 
-    function renderCharts() {
-      destroyCharts();
+function fmtDateKey(k) {
+  if (!k) return '—';
+  const [y,m,d] = k.split('-');
+  const dt = new Date(+y,+m-1,+d);
+  return dt.toLocaleDateString('pt-BR', { weekday:'short', day:'numeric', month:'numeric' });
+}
 
-      // 1. Daily chart
-      const days = summary.byDay || [];
-      const ctx1 = document.getElementById('dailyChart').getContext('2d');
-      charts.daily = new Chart(ctx1, {
-        type: 'bar',
-        data: {
-          labels: days.map(d => formatDateKey(d.date)),
-          datasets: [
-            { label: 'OK', data: days.map(d => d.ok || 0), backgroundColor: '#4ade8040', borderColor: '#4ade80', borderWidth: 1, borderRadius: 3 },
-            { label: 'Erro', data: days.map(d => d.error || 0), backgroundColor: '#f8717140', borderColor: '#f87171', borderWidth: 1, borderRadius: 3 }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { labels: { boxWidth: 10, padding: 12 } } },
-          scales: {
-            x: { stacked: true, grid: { display: false } },
-            y: { stacked: true, beginAtZero: true, grid: { color: '#1f1f28' }, ticks: { stepSize: 1 } }
-          }
-        }
-      });
+let charts = {};
+function killCharts() {
+  Object.values(charts).forEach(c => { try{ c.destroy() } catch(e){} });
+  charts = {};
+}
 
-      // 2. Duration chart
-      const jobs = (summary.byJob || []).sort((a, b) => b.avgDuration - a.avgDuration).slice(0, 10);
-      const ctx2 = document.getElementById('durationChart').getContext('2d');
-      charts.duration = new Chart(ctx2, {
-        type: 'bar',
-        data: {
-          labels: jobs.map(j => j.name.length > 20 ? j.name.slice(0, 20) + '…' : j.name),
-          datasets: [{
-            label: 'Duração média (s)',
-            data: jobs.map(j => Math.round(j.avgDuration / 1000)),
-            backgroundColor: jobs.map(j => {
-              const r = j.avgDuration / 1000;
-              return r > 120 ? '#f8717140' : r > 60 ? '#fbbf2440' : '#22d3ee40';
-            }),
-            borderColor: jobs.map(j => {
-              const r = j.avgDuration / 1000;
-              return r > 120 ? '#f87171' : r > 60 ? '#fbbf24' : '#22d3ee';
-            }),
-            borderWidth: 1, borderRadius: 3
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          indexAxis: 'y',
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { beginAtZero: true, grid: { color: '#1f1f28' } },
-            y: { grid: { display: false } }
-          }
-        }
-      });
+function render(d) {
+  const byDay = d.byDay || [];
+  const byJob = d.byJob || [];
+  const latest = d.latest || [];
 
-      // 3. Tokens chart
-      const tokenJobs = (summary.byJob || []).sort((a, b) => b.totalTokens - a.totalTokens).slice(0, 8);
-      const ctx3 = document.getElementById('tokensChart').getContext('2d');
-      charts.tokens = new Chart(ctx3, {
-        type: 'doughnut',
-        data: {
-          labels: tokenJobs.map(j => j.name.length > 15 ? j.name.slice(0, 15) + '…' : j.name),
-          datasets: [{
-            data: tokenJobs.map(j => j.totalTokens),
-            backgroundColor: ['#22d3ee60','#a78bfa60','#4ade8060','#fbbf2460','#f8717160','#38bdf860','#c084fc60','#34d39960'],
-            borderColor: ['#22d3ee','#a78bfa','#4ade80','#fbbf24','#f87171','#38bdf8','#c084fc','#34d399'],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } }
-          },
-          cutout: '55%'
-        }
-      });
+  // Stats
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="label">Total</div><div class="value white">${d.total}</div></div>
+    <div class="stat"><div class="label">Sucesso</div><div class="value green">${d.ok}</div><div class="sub">${d.total ? Math.round(d.ok/d.total*100) : 0}%</div></div>
+    <div class="stat"><div class="label">Falhas</div><div class="value red">${d.errors}</div><div class="sub">${d.errorRate}% de erro</div></div>
+    <div class="stat"><div class="label">Jobs</div><div class="value white">${byJob.length}</div></div>
+    <div class="stat"><div class="label">Atualização</div><div class="value white" style="font-size:13px">${d.lastUpdated ? fmtDate(d.lastUpdated) : '—'}</div></div>
+  `;
 
-      // 4. Success rate
-      const rateJobs = (summary.byJob || []).filter(j => j.total > 0);
-      const ctx4 = document.getElementById('successRateChart').getContext('2d');
-      charts.successRate = new Chart(ctx4, {
-        type: 'bar',
-        data: {
-          labels: rateJobs.map(j => j.name.length > 15 ? j.name.slice(0, 15) + '…' : j.name),
-          datasets: [{
-            label: 'Sucesso %',
-            data: rateJobs.map(j => Math.round(j.ok / j.total * 100)),
-            backgroundColor: rateJobs.map(j => {
-              const pct = j.ok / j.total * 100;
-              return pct >= 80 ? '#4ade8040' : pct >= 50 ? '#fbbf2440' : '#f8717140';
-            }),
-            borderColor: rateJobs.map(j => {
-              const pct = j.ok / j.total * 100;
-              return pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#f87171';
-            }),
-            borderWidth: 1, borderRadius: 3
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { min: 0, max: 100, grid: { color: '#1f1f28' } },
-            x: { grid: { display: false } }
-          }
-        }
-      });
+  // Status indicator
+  const dot = document.getElementById('liveDot');
+  if (d.errorRate < 20) { dot.className = 'status-dot operational'; document.getElementById('liveStatus').textContent = 'Operacional'; }
+  else if (d.errorRate < 50) { dot.className = 'status-dot degraded'; document.getElementById('liveStatus').textContent = 'Degradado'; }
+  else { dot.className = 'status-dot critical'; document.getElementById('liveStatus').textContent = 'Crítico'; }
+  document.getElementById('lastUpdate').textContent = d.lastUpdated ? 'Última: ' + fmtDate(d.lastUpdated) : '';
 
-      // 5. Status pie
-      const ctx5 = document.getElementById('statusPieChart').getContext('2d');
-      charts.statusPie = new Chart(ctx5, {
-        type: 'doughnut',
-        data: {
-          labels: ['Sucesso', 'Erro'],
-          datasets: [{
-            data: [summary.ok, summary.errors],
-            backgroundColor: ['#4ade8040', '#f8717140'],
-            borderColor: ['#4ade80', '#f87171'],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } }
-          },
-          cutout: '60%'
-        }
-      });
-    }
+  // Jobs
+  document.getElementById('jobGrid').innerHTML = byJob.sort((a,b)=>b.total-a.total).map(j => {
+    const pct = j.total ? Math.round(j.ok/j.total*100) : 0;
+    const bar = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#f87171';
+    return `<div class="job-item">
+      <div class="name">${j.name}</div>
+      <div class="row"><span>Execuções</span><span>${j.total}</span></div>
+      <div class="row"><span>Sucesso</span><span style="color:#4ade80">${j.ok}</span></div>
+      <div class="row"><span>Falhas</span><span style="color:#f87171">${j.error}</span></div>
+      <div class="row"><span>Duração média</span><span>${fmtDur(j.avgDuration)}</span></div>
+      <div class="row"><span>Tokens total</span><span>${fmtTok(j.totalTokens)}</span></div>
+      <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${bar};box-shadow:0 0 6px ${bar}40"></div></div>
+    </div>`;
+  }).join('');
 
-    // ─── Main ────────────────────────────────────────────────
-    async function load() {
-      try {
-        const res = await fetch('/api/summary');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        summary = await res.json();
+  // Timeline
+  document.getElementById('timelineBody').innerHTML = latest.map(r => {
+    const s = r.status || 'unknown';
+    const cls = s === 'ok' ? 'ok' : s === 'error' ? 'error' : 'timeout';
+    const durPx = Math.min((r.durationMs||0)/5000*10, 100);
+    return `<tr>
+      <td style="font-family:monospace;font-size:11px">${fmtTime(r.runAt)}</td>
+      <td><strong>${r.displayName||r.jobName||'—'}</strong></td>
+      <td><span class="badge ${cls}">${s}</span></td>
+      <td style="font-family:monospace;font-size:11px"><span class="bar-dur" style="width:${durPx}px"></span>${fmtDur(r.durationMs)}</td>
+      <td style="font-family:monospace;font-size:11px">${fmtTok(r.totalTokens)}</td>
+      <td style="color:#71717a;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(r.summary||'').slice(0,120)}</td>
+    </tr>`;
+  }).join('');
 
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
+  // Charts
+  killCharts();
 
-        // Live dot
-        const dot = document.getElementById('liveDot');
-        dot.className = 'status-dot ' + (summary.errorRate < 30 ? 'ok' : 'error');
-        document.getElementById('liveStatus').textContent = summary.errorRate < 30 ? 'Operacional' : 'Atenção';
-
-        const up = document.getElementById('lastUpdate');
-        up.textContent = summary.lastUpdated ? 'Última atualização: ' + fmtDate(summary.lastUpdated) : '';
-
-        document.getElementById('footerDate').textContent = new Date().toLocaleDateString('pt-BR');
-
-        renderStats();
-        renderJobCards();
-        renderTimeline();
-        renderCharts();
-      } catch (err) {
-        document.getElementById('loading').innerHTML = `
-          <div style="font-size:40px;margin-bottom:12px">⚠️</div>
-          <div>Erro ao carregar dados: ${err.message}</div>
-          <div style="font-size:12px;margin-top:8px">Tentando novamente em 10s...</div>
-        `;
-        setTimeout(load, 10000);
+  const c1 = document.getElementById('dailyChart').getContext('2d');
+  charts.daily = new Chart(c1, {
+    type:'bar',
+    data:{
+      labels: byDay.map(d=>fmtDateKey(d.date)),
+      datasets:[
+        { label:'OK', data:byDay.map(d=>d.ok||0), backgroundColor:'#4ade8040', borderColor:'#4ade80', borderWidth:1, borderRadius:3 },
+        { label:'Erro', data:byDay.map(d=>d.error||0), backgroundColor:'#f8717140', borderColor:'#f87171', borderWidth:1, borderRadius:3 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ boxWidth:10, padding:10, color:'#71717a' } } },
+      scales:{
+        x:{ stacked:true, grid:{ display:false }, ticks:{ color:'#71717a' } },
+        y:{ stacked:true, beginAtZero:true, grid:{ color:'#1f1f28' }, ticks:{ stepSize:1, color:'#71717a' } }
       }
     }
+  });
 
-    // Auto-refresh every 60s
-    document.addEventListener('DOMContentLoaded', load);
-    setInterval(load, 60000);
-  </script>
+  const durJobs = byJob.sort((a,b)=>b.avgDuration-a.avgDuration).slice(0,10);
+  const c2 = document.getElementById('durationChart').getContext('2d');
+  charts.duration = new Chart(c2, {
+    type:'bar',
+    data:{
+      labels: durJobs.map(j => j.name.length>18 ? j.name.slice(0,18)+'…' : j.name),
+      datasets:[{
+        label:'Duração (s)',
+        data: durJobs.map(j => Math.round(j.avgDuration/1e3)),
+        backgroundColor: durJobs.map(j => j.avgDuration/1e3 > 120 ? '#f8717140' : j.avgDuration/1e3 > 60 ? '#fbbf2440' : '#22d3ee40'),
+        borderColor: durJobs.map(j => j.avgDuration/1e3 > 120 ? '#f87171' : j.avgDuration/1e3 > 60 ? '#fbbf24' : '#22d3ee'),
+        borderWidth:1, borderRadius:3
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ beginAtZero:true, grid:{ color:'#1f1f28' }, ticks:{ color:'#71717a' } },
+        y:{ grid:{ display:false }, ticks:{ color:'#71717a' } }
+      }
+    }
+  });
+
+  const tokJobs = byJob.sort((a,b)=>b.totalTokens-a.totalTokens).slice(0,8);
+  const c3 = document.getElementById('tokensChart').getContext('2d');
+  charts.tokens = new Chart(c3, {
+    type:'doughnut',
+    data:{
+      labels: tokJobs.map(j => j.name.length>14 ? j.name.slice(0,14)+'…' : j.name),
+      datasets:[{
+        data: tokJobs.map(j=>j.totalTokens),
+        backgroundColor: ['#22d3ee60','#a78bfa60','#4ade8060','#fbbf2460','#f8717160','#38bdf860','#c084fc60','#34d39960'],
+        borderColor: ['#22d3ee','#a78bfa','#4ade80','#fbbf24','#f87171','#38bdf8','#c084fc','#34d399'],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins:{
+        legend:{ position:'right', labels:{ boxWidth:10, padding:6, font:{size:10}, color:'#71717a' } }
+      }
+    }
+  });
+
+  const rateJobs = byJob.filter(j=>j.total>0);
+  const c4 = document.getElementById('successChart').getContext('2d');
+  charts.success = new Chart(c4, {
+    type:'bar',
+    data:{
+      labels: rateJobs.map(j => j.name.length>16 ? j.name.slice(0,16)+'…' : j.name),
+      datasets:[{
+        label:'% Sucesso',
+        data: rateJobs.map(j => Math.round(j.ok/j.total*100)),
+        backgroundColor: rateJobs.map(j => { const p=j.ok/j.total*100; return p>=80?'#4ade8040':p>=50?'#fbbf2440':'#f8717140'; }),
+        borderColor: rateJobs.map(j => { const p=j.ok/j.total*100; return p>=80?'#4ade80':p>=50?'#fbbf24':'#f87171'; }),
+        borderWidth:1, borderRadius:3
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        y:{ min:0, max:100, grid:{ color:'#1f1f28' }, ticks:{ color:'#71717a' } },
+        x:{ grid:{ display:false }, ticks:{ color:'#71717a' } }
+      }
+    }
+  });
+
+  const c5 = document.getElementById('pieChart').getContext('2d');
+  charts.pie = new Chart(c5, {
+    type:'doughnut',
+    data:{
+      labels:['Sucesso','Erro'],
+      datasets:[{
+        data:[d.ok, d.errors],
+        backgroundColor:['#4ade8040','#f8717140'],
+        borderColor:['#4ade80','#f87171'],
+        borderWidth:1
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ boxWidth:10, padding:12, color:'#71717a' } }
+      }
+    }
+  });
+
+  document.getElementById('footerDate').textContent = new Date().toLocaleDateString('pt-BR');
+}
+
+async function load() {
+  try {
+    const res = await fetch('data/cron-logs.json');
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    render({
+      total: data.crons.length,
+      ok: data.crons.filter(c=>c.status==='ok').length,
+      errors: data.crons.filter(c=>c.status==='error').length,
+      errorRate: data.crons.length ? Math.round(data.crons.filter(c=>c.status==='error').length/data.crons.length*100) : 0,
+      byDay: (()=>{
+        const map={};
+        data.crons.forEach(c=>{
+          const d=c.date||'unknown';
+          if(!map[d]) map[d]={date:d,total:0,ok:0,error:0};
+          map[d].total++; map[d][c.status]++;
+        });
+        return Object.values(map).sort((a,b)=>a.date.localeCompare(b.date));
+      })(),
+      byJob: (()=>{
+        const map={};
+        data.crons.forEach(c=>{
+          const n=c.displayName||c.jobName||'unknown';
+          if(!map[n]) map[n]={name:n,total:0,ok:0,error:0,avgDuration:0,totalTokens:0};
+          map[n].total++; map[n][c.status]++; map[n].avgDuration+=c.durationMs||0; map[n].totalTokens+=c.totalTokens||0;
+        });
+        return Object.values(map).map(j=>({...j,avgDuration:j.total?Math.round(j.avgDuration/j.total):0}));
+      })(),
+      latest: [...data.crons].sort((a,b)=>new Date(b.runAt)-new Date(a.runAt)).slice(0,25),
+      lastUpdated: data.lastUpdated
+    });
+  } catch(e) {
+    document.getElementById('loading').innerHTML = `<div style="font-size:32px;margin-bottom:8px">⚠️</div><div>Erro: ${e.message}</div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', load);
+setInterval(load, 60000);
+</script>
 </body>
 </html>

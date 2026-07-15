@@ -3,10 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
+    "build": "mkdir -p out && cp -r public/* out/",
     "seed": "node scripts/seed.cjs",
-    "dev": "node server.js",
-    "build": "node scripts/seed.cjs"
+    "start": "npx serve out -p 3000"
   },
   "dependencies": {
     "express": "^5.2.1",
