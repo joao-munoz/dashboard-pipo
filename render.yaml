@@ -1,8 +1,15 @@
-# render.yaml — Config do Static Site
+# render.yaml — PIPO Dashboard Web Service
 services:
-  - type: static_site
+  - type: web_service
     name: dashboard-pipo
     repo: https://github.com/joao-munoz/dashboard-pipo
     branch: main
-    buildCommand: npm install && npm run build
-    publishPath: out
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/summary
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
