@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-07-16T09:46:00-03:00",
+  "vault": {
+    "totalMdFiles": 51,
+    "totalFiles": 53,
+    "totalSizeBytes": 198551,
+    "folders": {
+      "inbox": { "mdFiles": 15, "files": 15, "sizeBytes": 158541, "label": "Inbox" },
+      "Sites": { "mdFiles": 2, "files": 2, "sizeBytes": 2178, "label": "Sites" },
+      "IA": { "mdFiles": 0, "files": 0, "sizeBytes": 0, "label": "IA" },
+      "projetos": { "mdFiles": 9, "files": 11, "sizeBytes": 91083, "label": "Projetos" },
+      "diario": { "mdFiles": 3, "files": 3, "sizeBytes": 3332, "label": "Diário" },
+      "pessoal": { "mdFiles": 0, "files": 0, "sizeBytes": 0, "label": "Pessoal" },
+      "descobertas": { "mdFiles": 4, "files": 4, "sizeBytes": 33977, "label": "Descobertas" },
+      "repos": { "mdFiles": 18, "files": 18, "sizeBytes": 31979, "label": "Repositórios" }
+    }
+  },
+  "system": {
+    "model": "opencode/deepseek-v4-flash-free",
+    "modelPro": "opencode/deepseek-v4-pro",
+    "timezone": "America/Sao_Paulo",
+    "platform": "OpenClaw on WSL2 (Ubuntu)",
+    "nodeVersion": "v24.18.0"
+  },
+  "crons": {
+    "total": 17,
+    "active": 11,
+    "errors": 5,
+    "idle": 1,
+    "jobs": [
+      { "name": "📊 PIPO Dashboard — Coleta de Dados", "schedule": "0 7,9,12,15,18,21 * * *", "status": "ok" },
+      { "name": "📬 Gmail Inbox Zero (12:00)", "schedule": "0 12 * * *", "status": "ok" },
+      { "name": "Rotina Diária de Descoberta de Repositórios", "schedule": "0 8,18 * * *", "status": "ok" },
+      { "name": "🔧 Revisão Geral Diária", "schedule": "30 18 * * *", "status": "ok" },
+      { "name": "🔄 PIPO Dashboard — Auto-update", "schedule": "30 19 * * *", "status": "idle" },
+      { "name": "TikTok S1 — Planejamento Tático", "schedule": "0 7 * * *", "status": "ok" },
+      { "name": "TikTok S4 — Conteúdo & Copy", "schedule": "0 10 * * *", "status": "ok" },
+      { "name": "TikTok S5 — Ferramentas & Automação", "schedule": "0 11 * * *", "status": "ok" },
+      { "name": "TikTok S6 — Artefatos & Produção", "schedule": "0 13 * * *", "status": "ok" },
+      { "name": "TikTok S7 — Monetização & Operação", "schedule": "0 14 * * *", "status": "ok" },
+      { "name": "TikTok S8 — Experimentação Prática", "schedule": "0 15 * * *", "status": "ok" },
+      { "name": "TikTok S9 — Validação Cruzada", "schedule": "0 16 * * *", "status": "ok" },
+      { "name": "TikTok S10 — Síntese & Feedback", "schedule": "0 18 * * *", "status": "ok" },
+      { "name": "🌙 TikTok Madrugada 1 — n8n+Discovery", "schedule": "0 2 * * *", "status": "error" },
+      { "name": "🌙 TikTok Madrugada 2 — Roteiro+LLM", "schedule": "0 3 * * *", "status": "error" },
+      { "name": "🌙 TikTok Madrugada 3 — Vídeo+Legendas", "schedule": "0 4 * * *", "status": "error" },
+      { "name": "🌙 TikTok Madrugada 4 — Publicação", "schedule": "0 5 * * *", "status": "error" },
+      { "name": "🌙 TikTok Madrugada 5 — Monetização", "schedule": "0 6 * * *", "status": "error" },
+      { "name": "🌙 TikTok Madrugada 6 — Consolidação", "schedule": "0 7 * * *", "status": "error" }
+    ]
+  },
+  "projetos": {
+    "total": 6,
+    "active": [
+      { "name": "PIPO Dashboard", "status": "ativo", "progress": 90 },
+      { "name": "TikTok Shop Afiliado IA", "status": "planejamento", "progress": 15 },
+      { "name": "Flightclaw + Pipo Travel Bot", "status": "ativo", "progress": 70 },
+      { "name": "Second Brain (Obsidian Vault)", "status": "ativo", "progress": 60 },
+      { "name": "n8n Automação", "status": "ativo", "progress": 30 },
+      { "name": "Inbox Zero Automatizado", "status": "ativo", "progress": 85 }
+    ]
+  },
+  "ecosystem": {
+    "github": {
+      "connected": true,
+      "repo": "joao-munoz/dashboard-pipo",
+      "branch": "main"
+    },
+    "render": {
+      "url": "https://dashboard-pipo.onrender.com",
+      "status": "deployed",
+      "lastDeploy": "2026-07-16T00:15:01Z"
+    },
+    "openclaw": {
+      "version": "latest",
+      "gateway": "localhost:6400"
+    }
+  },
+  "recentFiles": [
+    { "path": "inbox/credenciais-github.md", "modified": "2026-07-15T18:32:00-03:00", "size": 476 },
+    { "path": "inbox/compras-casa-16-jul-2026.md", "modified": "2026-07-15T18:32:00-03:00", "size": 104 },
+    { "path": "inbox/custos-tiktok-shop-2026-07-15.md", "modified": "2026-07-15T18:32:00-03:00", "size": 9279 },
+    { "path": "inbox/esboco-workflow-n8n-tiktok-2026-07-15.md", "modified": "2026-07-15T18:32:00-03:00", "size": 45781 },
+    { "path": "inbox/prompts-roteiro-tiktok-shop-2026-07-15.md", "modified": "2026-07-15T18:32:00-03:00", "size": 29393 },
+    { "path": "descobertas/2026-07-16-repos.md", "modified": "2026-07-16T08:01:00-03:00", "size": 8010 },
+    { "path": "descobertas/2026-07-15-oportunidades.md", "modified": "2026-07-15T18:32:00-03:00", "size": 3949 },
+    { "path": "diario/2026-07-15.md", "modified": "2026-07-15T18:32:00-03:00", "size": 1202 },
+    { "path": "diario/2026-07-14.md", "modified": "2026-07-14T18:32:00-03:00", "size": 1178 },
+    { "path": "projetos/tiktok-shop-afiliado/plano-mestre.md", "modified": "2026-07-15T18:32:00-03:00", "size": 8633 }
+  ]
+}
