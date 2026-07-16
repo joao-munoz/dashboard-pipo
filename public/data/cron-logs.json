@@ -11,6 +11,22 @@
       "inputTokens": 0,
       "outputTokens": 0,
       "model": "deepseek-v4-flash-free",
+      "runAt": "2026-07-16T18:02:00.000-03:00",
+      "summary": "Coleta de dados dos crons e atualização do dashboard.",
+      "delivered": false,
+      "date": "2026-07-16"
+    },
+    {
+      "jobId": "0adf00df-2f93-4111-987d-94e8a437d20f",
+      "jobName": "dashboard-data-push",
+      "displayName": "📊 PIPO Dashboard — Coleta de Dados",
+      "status": "ok",
+      "error": null,
+      "durationMs": null,
+      "totalTokens": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "model": "deepseek-v4-flash-free",
       "runAt": "2026-07-16T15:00:00.000-03:00",
       "summary": "Coleta de dados dos crons e atualização do dashboard.",
       "delivered": false,
@@ -368,10 +384,10 @@
     },
     {
       "date": "2026-07-16",
-      "total": 6,
-      "ok": 6,
+      "total": 7,
+      "ok": 7,
       "error": 0
     }
   ],
-  "lastUpdated": "2026-07-16T18:01:57.523Z"
+  "lastUpdated": "2026-07-16T21:04:28.873Z"
 }
