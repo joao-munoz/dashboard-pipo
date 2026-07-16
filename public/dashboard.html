@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIPO Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --card-border: #30363d;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --orange: #d4760e;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --teal: #56d4dd;
+    --text: #c9d1d9;
+    --text-dim: #8b949e;
+    --text-bright: #f0f6fc;
+    --hover: #1c2128;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width:1400px; margin:0 auto; }
+  
+  /* Header */
+  .header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 0; border-bottom:1px solid var(--card-border); margin-bottom:24px;
+  }
+  .header h1 {
+    font-size:28px; font-weight:700; color:var(--text-bright);
+    display:flex; align-items:center; gap:12px;
+  }
+  .header h1 span { color:var(--accent); }
+  .header .subtitle { color:var(--text-dim); font-size:14px; margin-top:4px; }
+  .header .time { color:var(--text-dim); font-size:13px; text-align:right; }
+  .header .time b { color:var(--text); }
+  .status-dot {
+    display:inline-block; width:10px; height:10px; border-radius:50%;
+    margin-right:6px;
+  }
+  .status-dot.online { background:var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.offline { background:var(--red); }
+  .status-dot.warning { background:var(--yellow); }
+  .status-dot.idle { background:var(--text-dim); }
+
+  /* Stats Row */
+  .stats-row {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap:16px; margin-bottom:24px;
+  }
+  .stat-card {
+    background:var(--card); border:1px solid var(--card-border); border-radius:8px;
+    padding:16px; text-align:center; transition:border-color .2s;
+  }
+  .stat-card:hover { border-color:var(--accent); }
+  .stat-card .value { font-size:28px; font-weight:700; color:var(--text-bright); }
+  .stat-card .label { font-size:12px; color:var(--text-dim); margin-top:4px; text-transform:uppercase; letter-spacing:.5px; }
+  .stat-card .icon { font-size:20px; margin-bottom:4px; }
+
+  /* Section */
+  .section-title {
+    font-size:18px; font-weight:600; color:var(--text-bright);
+    margin:28px 0 16px; padding-bottom:8px;
+    border-bottom:1px solid var(--card-border);
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-title .badge {
+    font-size:11px; font-weight:500; padding:2px 8px; border-radius:10px;
+    background:var(--card-border); color:var(--text-dim); margin-left:8px;
+  }
+  .section-title .badge.green { background:rgba(63,185,80,.15); color:var(--green); }
+  .section-title .badge.orange { background:rgba(212,118,14,.15); color:var(--orange); }
+  .section-title .badge.purple { background:rgba(188,140,255,.15); color:var(--purple); }
+
+  /* Project Grid */
+  .proj-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap:16px; margin-bottom:8px;
+  }
+  .proj-card {
+    background:var(--card); border:1px solid var(--card-border); border-radius:8px;
+    padding:16px; position:relative; overflow:hidden;
+    transition:border-color .2s, transform .2s;
+  }
+  .proj-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .proj-card .proj-badge {
+    position:absolute; top:12px; right:12px;
+    font-size:10px; font-weight:600; padding:2px 8px; border-radius:6px;
+    text-transform:uppercase; letter-spacing:.5px;
+  }
+  .proj-badge.active { background:rgba(63,185,80,.15); color:var(--green); }
+  .proj-badge.planning { background:rgba(212,118,14,.15); color:var(--orange); }
+  .proj-badge.paused { background:rgba(248,81,73,.15); color:var(--red); }
+  .proj-badge.done { background:rgba(86,212,221,.15); color:var(--teal); }
+  .proj-card h3 { font-size:15px; color:var(--text-bright); margin-bottom:6px; }
+  .proj-card p { font-size:12px; color:var(--text-dim); line-height:1.5; margin-bottom:10px; }
+  .proj-card .meta { font-size:11px; color:var(--text-dim); display:flex; gap:12px; flex-wrap:wrap; }
+  .proj-card .meta span { display:flex; align-items:center; gap:4px; }
+  .prog-bar {
+    height:4px; background:var(--card-border); border-radius:2px; margin:10px 0 6px; overflow:hidden;
+  }
+  .prog-bar .fill { height:100%; border-radius:2px; transition:width 1s ease; }
+  .fill.green { background:var(--green); }
+  .fill.yellow { background:var(--yellow); }
+  .fill.purple { background:var(--purple); }
+  .fill.teal { background:var(--teal); }
+  .prog-label { font-size:10px; color:var(--text-dim); display:flex; justify-content:space-between; }
+
+  /* Timeline */
+  .timeline { position:relative; padding-left:32px; margin:8px 0 16px; }
+  .timeline::before {
+    content:''; position:absolute; left:14px; top:4px; bottom:4px;
+    width:2px; background:var(--card-border);
+  }
+  .tl-item { position:relative; margin-bottom:10px; }
+  .tl-item::before {
+    content:''; position:absolute; left:-20px; top:5px;
+    width:10px; height:10px; border-radius:50%;
+    background:var(--card-border); border:2px solid var(--bg);
+  }
+  .tl-item .tl-time { font-size:11px; color:var(--text-dim); font-weight:600; }
+  .tl-item .tl-title { font-size:13px; color:var(--text); }
+  .tl-item .tl-desc { font-size:11px; color:var(--text-dim); }
+  .tl-item.done::before { background:var(--green); }
+  .tl-item.running::before { background:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+  .tl-item.waiting::before { background:var(--text-dim); }
+  .tl-item.blocked::before { background:var(--red); }
+
+  /* Inbox / Ideas Grid */
+  .idea-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap:12px;
+  }
+  .idea-card {
+    background:var(--card); border:1px solid var(--card-border); border-radius:6px;
+    padding:12px; transition:border-color .2s;
+  }
+  .idea-card:hover { border-color:var(--purple); }
+  .idea-card h4 { font-size:13px; color:var(--text-bright); margin-bottom:4px; }
+  .idea-card .size { font-size:11px; color:var(--text-dim); }
+
+  /* Blockers */
+  .blocker-list { margin:8px 0; }
+  .blocker-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px; background:var(--card); border:1px solid var(--card-border);
+    border-left:3px solid var(--red); border-radius:6px; margin-bottom:8px;
+  }
+  .blocker-item .text { flex:1; }
+  .blocker-item .text strong { color:var(--text-bright); font-size:13px; }
+  .blocker-item .text span { font-size:12px; color:var(--text-dim); }
+  .blocker-item .tag {
+    font-size:10px; padding:2px 6px; border-radius:4px;
+    background:rgba(248,81,73,.15); color:var(--red); font-weight:600;
+  }
+
+  /* Daily Pulse */
+  .pulse-box {
+    background:var(--card); border:1px solid var(--card-border); border-radius:8px;
+    padding:16px; margin:8px 0;
+  }
+  .pulse-box .date { font-size:13px; color:var(--accent); font-weight:600; margin-bottom:8px; }
+  .pulse-box li { font-size:13px; color:var(--text); margin-bottom:4px; margin-left:16px; }
+
+  /* Discovery */
+  .disc-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin:8px 0;
+  }
+  .disc-item {
+    background:var(--card); border:1px solid var(--card-border); border-radius:6px;
+    padding:10px; text-align:center;
+  }
+  .disc-item .score { font-size:20px; font-weight:700; }
+  .disc-item .label { font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .score-8 { color:var(--green); } .score-7 { color:var(--purple); } .score-6 { color:var(--yellow); }
+
+  /* Cron Table */
+  .cron-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:8px;
+  }
+  .cron-card {
+    display:flex; align-items:center; gap:10px;
+    padding:8px 12px; background:var(--card); border:1px solid var(--card-border);
+    border-radius:6px; font-size:12px;
+  }
+  .cron-card .time-c { font-weight:700; color:var(--text-bright); min-width:40px; }
+  .cron-card .name-c { flex:1; color:var(--text); }
+  .cron-card .status-c { font-size:10px; padding:2px 6px; border-radius:4px; font-weight:600; }
+  .status-c.ok { background:rgba(63,185,80,.15); color:var(--green); }
+  .status-c.idle { background:rgba(139,148,158,.15); color:var(--text-dim); }
+
+  .section-group { margin-bottom:24px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    body { padding:12px; }
+    .header { flex-direction:column; align-items:flex-start; gap:8px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .proj-grid { grid-template-columns:1fr; }
+    .cron-grid { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1><span>PIPO</span> Dashboard</h1>
+      <div class="subtitle">Ecossistema Pessoal do Joao · 2026</div>
+    </div>
+    <div class="time">
+      <span class="status-dot online"></span> Sistema Operacional<br>
+      <b id="clock">--:--:--</b>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card">
+      <div class="icon">&#x1F4DA;</div>
+      <div class="value" id="statNotes">0</div>
+      <div class="label">Notas no Vault</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">&#x1F4E6;</div>
+      <div class="value" id="statIdeas">0</div>
+      <div class="label">Ideias em Analise</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">&#x23F1;&#xFE0F;</div>
+      <div class="value" id="statCrons">0</div>
+      <div class="label">Crons Ativos</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">&#x1F4BB;</div>
+      <div class="value" id="statProjs">0</div>
+      <div class="label">Projetos</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">&#x1F680;</div>
+      <div class="value" id="statBlockers">0</div>
+      <div class="label">Bloqueios</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">&#x1F4C5;</div>
+      <div class="value" id="statDays">0</div>
+      <div class="label">Dias de Atividade</div>
+    </div>
+  </div>
+
+  <!-- DAILY PULSE -->
+  <div class="section-title">&#x1F4A0; Pulso do Dia <span class="badge green">Hoje, 15/Jul</span></div>
+  <div class="pulse-box">
+    <div class="date">Quarta-feira, 15 de Julho de 2026</div>
+    <ul>
+      <li><b>Revisao Geral do Sistema</b> — hoje foi dia de olhar estrutura, identificar gaps e priorizar</li>
+      <li><b>Descoberta de repos</b> rodou 2x — 12 repos relevantes encontrados</li>
+      <li><b>Oportunidades de mercado</b> — Top pick: Faceless Revenge Stories (8/10)</li>
+      <li><b>TikTok Shop</b> — plano mestre criado, 6 crons noturnos configurados</li>
+      <li><b>n8n rodando</b> — versao 2.30.5 em localhost:5678</li>
+      <li><b>Flightclaw confirmado</b> — Google Flights real, GRU->Santiago R$ 562</li>
+      <li><b>Protocolo anti-looping</b> definido com palavra de seguranca "Reboot"</li>
+    </ul>
+  </div>
+
+  <!-- LIVE CRON TIMELINE -->
+  <div class="section-group">
+    <div class="section-title">&#x23F0; Timeline de Hoje <span class="badge">Fuso: America/Sao_Paulo</span></div>
+    <div class="timeline" id="todayTimeline"></div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="section-group">
+    <div class="section-title">&#x1F4A1; Projetos Ativos <span class="badge purple">5 projetos</span></div>
+    <div class="proj-grid" id="projGrid">
+      <div class="proj-card">
+        <span class="proj-badge planning">EM PLANEJAMENTO</span>
+        <h3>&#x1F4F1; TikTok Shop Afiliado IA</h3>
+        <p>Motor de producao de videos faceless para afiliados TikTok Shop. Pipeline: roteiro LLM -> narracao -> video -> legendas -> publicacao. 10 dias de estudo + implantacao.</p>
+        <div class="prog-bar"><div class="fill yellow" style="width:15%"></div></div>
+        <div class="prog-label"><span>&#x1F4C8; 15% concluido</span><span>Estudo dia 1/10</span></div>
+        <div class="meta">
+          <span>&#x1F9F0; n8n pronto</span>
+          <span>&#x1F30D; 12 mercados</span>
+          <span>&#x1F4A1; 8 nichos</span>
+        </div>
+      </div>
+
+      <div class="proj-card">
+        <span class="proj-badge active">OPERACIONAL</span>
+        <h3>&#x2708;&#xFE0F; Flightclaw + Pipo Travel Bot</h3>
+        <p>Buscador de passagens reais via Google Flights. Top 30 GRU-mundo em agosto: Uberlandia R$ 339, Recife R$ 454, Santiago R$ 562.</p>
+        <div class="prog-bar"><div class="fill green" style="width:70%"></div></div>
+        <div class="prog-label"><span>&#x1F4C8; 70% funcional</span><span>Dados reais OK</span></div>
+        <div class="meta">
+          <span>&#x1F30D; GRU -> Mundo</span>
+          <span>&#x1F4CA; 30 rotas</span>
+          <span>&#x1F4E6; Duffel removido</span>
+        </div>
+      </div>
+
+      <div class="proj-card">
+        <span class="proj-badge active">OPERACIONAL</span>
+        <h3>&#x2699;&#xFE0F; n8n Automacao</h3>
+        <p>Orquestrador do ecossistema. Versao 2.30.5 rodando em localhost:5678. Conta owner: pipo@local.local. Base para pipeline TikTok.</p>
+        <div class="prog-bar"><div class="fill teal" style="width:30%"></div></div>
+        <div class="prog-label"><span>&#x1F4C8; 30% aproveitado</span><span>Workflows pendentes</span></div>
+        <div class="meta">
+          <span>&#x1F310; localhost:5678</span>
+          <span>&#x1F9F0; Owner configurado</span>
+        </div>
+      </div>
+
+      <div class="proj-card">
+        <span class="proj-badge active">ROTINA</span>
+        <h3>&#x1F4E8; Inbox Zero Automatizado</h3>
+        <p>Scan diario > categorizacao inteligente > unsubscribe (propaganda) > trash > relatorio no Telegram. Cron todo dia 12:00.</p>
+        <div class="prog-bar"><div class="fill green" style="width:85%"></div></div>
+        <div class="prog-label"><span>&#x1F4C8; 85% operacional</span><span>Skill v4 pendente</span></div>
+        <div class="meta">
+          <span>&#x1F4E9; joaomunoz6@gmail.com</span>
+          <span>&#x1F4CB; 30+ dominios filtrados</span>
+        </div>
+      </div>
+
+      <div class="proj-card">
+        <span class="proj-badge planning">OPORTUNIDADES</span>
+        <h3>&#x1F50D; Varredura de Oportunidades</h3>
+        <p>Pipeline semanal de descoberta de ideias de negocio: seg/qua/sex as 17:30. Top picks: Faceless Revenge Stories (8/10), Virtual Staging IA (7/10), Agente Viagens WhatsApp (7/10).</p>
+        <div class="prog-bar"><div class="fill yellow" style="width:40%"></div></div>
+        <div class="prog-label"><span>&#x1F4C8; 40% estruturado</span><span>3 oportunidades na fila</span></div>
+        <div class="meta">
+          <span>&#x1F4A1; 3 top picks</span>
+          <span>&#x1F4C5; Seg/Qua/Sex</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRONS -->
+  <div class="section-group">
+    <div class="section-title">&#x23F0; Crons Agendados <span class="badge" id="cronCount">carregando...</span></div>
+    <div class="section-title" style="font-size:14px; border:none; margin:4px 0 8px; color:var(--yellow);">&#x1F319; Madrugada TikTok (02h - 07h)</div>
+    <div class="cron-grid" id="cronNight"></div>
+    <div class="section-title" style="font-size:14px; border:none; margin:12px 0 8px; color:var(--teal);">&#x1F4DD; Estudo TikTok (07h - 18h)</div>
+    <div class="cron-grid" id="cronDay"></div>
+    <div class="section-title" style="font-size:14px; border:none; margin:12px 0 8px; color:var(--accent);">&#x26A1; Rotina & Infra</div>
+    <div class="cron-grid" id="cronInfra"></div>
+  </div>
+
+  <!-- DISCOVERY / OPPORTUNITIES -->
+  <div class="section-group">
+    <div class="section-title">&#x1F4A1; Oportunidades na Mira <span class="badge purple">3 ativas</span></div>
+    <div class="disc-grid">
+      <div class="disc-item">
+        <div class="score score-8">8/10</div>
+        <div class="label">Faceless Revenge Stories</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">YouTube automatizado</div>
+      </div>
+      <div class="disc-item">
+        <div class="score score-7">7/10</div>
+        <div class="label">Virtual Staging IA</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">Moveis com IA</div>
+      </div>
+      <div class="disc-item">
+        <div class="score score-7">7/10</div>
+        <div class="label">Agente Viagens WhatsApp</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">Flightclaw + bot</div>
+      </div>
+      <div class="disc-item">
+        <div class="score score-6">6/10</div>
+        <div class="label">Office AI SaaS</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">Ideia #10 do vault</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VAULT INBOX -->
+  <div class="section-group">
+    <div class="section-title">&#x1F4E5; Inbox do Vault <span class="badge" id="inboxCount">carregando...</span></div>
+    <div class="idea-grid" id="inboxGrid"></div>
+  </div>
+
+  <!-- BLOCKERS -->
+  <div class="section-group">
+    <div class="section-title">&#x26A0;&#xFE0F; Bloqueios & Pendenciais <span class="badge orange" id="blockerCount">2</span></div>
+    <div class="blocker-list">
+      <div class="blocker-item">
+        <span class="tag">CRITICO</span>
+        <div class="text"><strong>GitHub Token Expirado</strong><br><span>ghp_ai...USrz — push e deploy bloqueados. Impede deploy do dashboard e bot Telegram.</span></div>
+      </div>
+      <div class="blocker-item">
+        <span class="tag">MEDIO</span>
+        <div class="text"><strong>Deploy Pendente</strong><br><span>Dashboard PIPO (render) e bot Telegram esperando renovacao do token GitHub + novo deploy.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:40px; padding:16px 0; border-top:1px solid var(--card-border); display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim);">
+    <span>PIPO v0.1 · Construido em 15/Jul/2026</span>
+    <span>Feito com &#x2764;&#xFE0F; para o Joao</span>
+  </div>
+
+</div>
+
+<script>
+// ===== DATA =====
+const DATA = {
+  inbox: [
+    { name: "Esboco Workflow n8n TikTok", size: "45.7 KB" },
+    { name: "Prompts Roteiro TikTok Shop", size: "29.3 KB" },
+    { name: "Workflows n8n ZIE-619 TikTok", size: "25.3 KB" },
+    { name: "Pesquisa TikTok Shop Ferram/Ads", size: "14.1 KB" },
+    { name: "Custos TikTok Shop", size: "9.2 KB" },
+    { name: "Oportunidade: Agente Viagens WhatsApp", size: "4.9 KB" },
+    { name: "Oportunidade: Virtual Staging IA", size: "4.4 KB" },
+    { name: "Oportunidade: Faceless Revenge Stories", size: "4.0 KB" },
+    { name: "Ideias Gerais (14/Jul)", size: "4.4 KB" },
+    { name: "Analise Looping 15/Jul", size: "3.9 KB" },
+    { name: "Rotina Descoberta Repos", size: "1.4 KB" },
+    { name: "Office AI Ideia #10", size: "1.1 KB" },
+    { name: "Credenciais GitHub", size: "0.4 KB" }
+  ],
+  cronsNight: [
+    { time: "02:00", name: "n8n + Discovery Script", status: "agendado" },
+    { time: "03:00", name: "Modulo de Roteiro + Template LLM", status: "agendado" },
+    { time: "04:00", name: "Engine de Video + Legendas", status: "agendado" },
+    { time: "05:00", name: "Publicacao Automatica", status: "agendado" },
+    { time: "06:00", name: "Monetizacao + Contas", status: "agendado" },
+    { time: "07:00", name: "Consolidacao + Relatorio", status: "agendado" }
+  ],
+  cronsDay: [
+    { time: "07:00", name: "S1 — Planejamento Tatico", status: "agendado" },
+    { time: "08:00", name: "S2 — Pesquisa Pesada", status: "agendado" },
+    { time: "09:00", name: "S3 — Contra-Prova", status: "agendado" },
+    { time: "10:00", name: "S4 — Conteudo & Copy", status: "agendado" },
+    { time: "11:00", name: "S5 — Ferramentas & Automacao", status: "agendado" },
+    { time: "13:00", name: "S6 — Artefatos & Producao", status: "agendado" },
+    { time: "14:00", name: "S7 — Monetizacao & Operacao", status: "agendado" },
+    { time: "15:00", name: "S8 — Experimentacao Pratica", status: "agendado" },
+    { time: "16:00", name: "S9 — Validacao Cruzada", status: "agendado" },
+    { time: "18:00", name: "S10 — Sintese & Feedback", status: "agendado" }
+  ],
+  cronsInfra: [
+    { time: "08:00", name: "Rotina Diaria de Descoberta", status: "ok" },
+    { time: "12:00", name: "Gmail Inbox Zero", status: "ok" },
+    { time: "18:30", name: "Revisao Geral Diaria", status: "ok" },
+    { time: "17:30(seg/qua/sex)", name: "Varredura de Oportunidades", status: "ok" }
+  ],
+  timeline: [
+    { time: "00:00-02:00", title: "Janela silenciosa (sem crons)", desc: "", cls: "done" },
+    { time: "02:00", title: "n8n + Discovery Script (TikTok)", desc: "Inicio da madrugada de automacao", cls: "waiting" },
+    { time: "03:00", title: "Modulo de Roteiro + Template LLM", desc: "Produz roteiros via IA", cls: "waiting" },
+    { time: "04:00", title: "Engine de Video + Legendas", desc: "Renderiza videos automaticos", cls: "waiting" },
+    { time: "05:00", title: "Publicacao Automatica", desc: "Posta nos canais alvo", cls: "waiting" },
+    { time: "06:00", title: "Monetizacao + Contas", desc: "Gerenciamento financeiro", cls: "waiting" },
+    { time: "07:00", title: "Consolidacao + Relatorio da Noite", desc: "Resumo do que foi produzido", cls: "waiting" },
+    { time: "08:00", title: "S2 — Pesquisa Pesada (TikTok)", desc: "Estudo de ferramentas e nichos", cls: "waiting" },
+    { time: "12:00", title: "Inbox Zero — Varredura de Email", desc: "Limpeza automatica de caixa", cls: "waiting" },
+    { time: "17:30", title: "Varredura de Oportunidades (seg/qua/sex)", desc: "Busca de ideias de negocio", cls: "waiting" },
+    { time: "18:00", title: "S10 — Sintese & Feedback", desc: "Fechamento do dia TikTok", cls: "waiting" },
+    { time: "18:30", title: "Revisao Geral Diaria", desc: "Checkup completo do ecossistema", cls: "waiting" }
+  ]
+};
+
+function render() {
+  // Stats
+  document.getElementById('statNotes').textContent = '17';
+  document.getElementById('statIdeas').textContent = '13';
+  document.getElementById('statCrons').textContent = '22';
+  document.getElementById('statProjs').textContent = '5';
+  document.getElementById('statBlockers').textContent = '2';
+  document.getElementById('statDays').textContent = '3';
+
+  // Inbox
+  const inboxGrid = document.getElementById('inboxGrid');
+  document.getElementById('inboxCount').textContent = DATA.inbox.length + ' notas';
+  DATA.inbox.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'idea-card';
+    div.innerHTML = `<h4>&#x1F4C4; ${item.name}</h4><div class="size">${item.size}</div>`;
+    inboxGrid.appendChild(div);
+  });
+
+  // Crons
+  const cronCount = DATA.cronsNight.length + DATA.cronsDay.length + DATA.cronsInfra.length;
+  document.getElementById('cronCount').textContent = cronCount + ' crons';
+
+  function renderCrons(list, id) {
+    const el = document.getElementById(id);
+    list.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'cron-card';
+      div.innerHTML = `
+        <div class="time-c">${c.time}</div>
+        <div class="name-c">${c.name}</div>
+        <span class="status-c ${c.status === 'ok' ? 'ok' : 'idle'}">${c.status}</span>
+      `;
+      el.appendChild(div);
+    });
+  }
+  renderCrons(DATA.cronsNight, 'cronNight');
+  renderCrons(DATA.cronsDay, 'cronDay');
+  renderCrons(DATA.cronsInfra, 'cronInfra');
+
+  // Timeline
+  const tl = document.getElementById('todayTimeline');
+  DATA.timeline.forEach(item => {
+    const div = document.createElement('div');
+    div.className = `tl-item ${item.cls}`;
+    div.innerHTML = `
+      <div class="tl-time">${item.time}</div>
+      <div class="tl-title">${item.title}</div>
+      ${item.desc ? `<div class="tl-desc">${item.desc}</div>` : ''}
+    `;
+    tl.appendChild(div);
+  });
+}
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  const opts = { timeZone: 'America/Sao_Paulo', hour12: false };
+  document.getElementById('clock').textContent = now.toLocaleString('pt-BR', opts);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Go
+document.addEventListener('DOMContentLoaded', render);
+if (document.readyState === 'complete' || document.readyState === 'interactive') render();
+</script>
+</body>
+</html>
